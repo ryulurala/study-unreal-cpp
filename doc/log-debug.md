@@ -1,5 +1,5 @@
 ---
-title: log & debug
+title: Log & Debug
 ---
 
 ## Before studying
