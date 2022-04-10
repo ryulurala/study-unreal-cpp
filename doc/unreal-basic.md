@@ -32,40 +32,123 @@ title: Unreal basic
   > 에디터 안에서 콘텐츠 애셋을 만들고 불러오고 수정하고 확인하는데 사용하는 영역
   - Unity: Project
 
+---
+
 ## 언리얼 vs 유니티
 
-|                       Unity                        |                                   Unreal                                   |
-| :------------------------------------------------: | :------------------------------------------------------------------------: |
-| 빈 깡통에서 부품을 맞춰 나감(= 컴포넌트 패턴 구조) |                 태생이 있고 확장시켜나감(= 상속 패턴 구조)                 |
-|      엔진이 쓰는 파일들의 삭제, 이름변경 쉬움      | 엔진이 쓰는 파일들의 삭제, 이름변경 어려움(엔진 끄고 탐색기에서 파일 삭제) |
-|                                                    |                                                                            |
-
-- 유니티는 카메라 오브젝트가 존재
-  - 언리얼은 카메라 오브젝트 없음
-  - 언리얼은 Default Pawn으로 해서 기본 플레이어 생성
-  - 카메라가 Default Pawn을 따라감
-    - 언리얼은 FPS 구조에서 시작
-    - 언리얼은 구조가 이미 잡혀있음
+|                         Unity                          |                                   Unreal                                   |
+| :----------------------------------------------------: | :------------------------------------------------------------------------: |
+| 빈 깡통에서 부품을 추가하는 방식(= 컴포넌트 패턴 구조) |                태생이 있고 확장하는 방식(= 상속 패턴 구조)                 |
+|        엔진이 쓰는 파일들의 삭제, 이름변경 쉬움        | 엔진이 쓰는 파일들의 삭제, 이름변경 어려움(엔진 끄고 탐색기에서 파일 삭제) |
+|        카메라 (컴포넌트가 붙은) 오브젝트가 존재        | Default Pawn으로 해서 기본 플레이어 생성 후 카메라가 Default Pawn을 따라감 |
 
 ### 실습: 의자를 하나 만들어보자
 
 1. Actor 생성
+
+   > `Actor`: 월드에 배치 or 스폰 가능한 `Object`(를 상속)
+
+   |    C++ 폴더 클릭 -> 오른쪽 마우스 클릭    |                Actor 선택                 |         이름 설정 후 클래스 생성          |
+   | :---------------------------------------: | :---------------------------------------: | :---------------------------------------: |
+   | ![create-actor-1](res/create-actor-1.png) | ![create-actor-2](res/create-actor-2.png) | ![create-actor-3](res/create-actor-3.png) |
+
 2. Mesh Component 추가
-   - 코드
-3. 의자 Mesh 파일 경로 복사(`Ctrl+C` or `메시 오른쪽 클릭+파일 경로 복사`)
-4. 해당 Actor에 가져온 Mesh 설정
 
-### 부록
+   - MyActor.h
 
-- Actor
+     ```cpp
+     #pragma once    // 순환 참조 방지
 
-  - Pawn
-    - character
+     #include "CoreMinimal.h"
+     #include "GameFramework/Actor.h"
+     #include "MyActor.generated.h"
 
-- Visual Studio 에서 빌드 = 언리얼 엔진 내에서의 컴파일
-- UPROPERTY()
+     UCLASS()    // 언리얼 오브젝트라는 것을 알려주는 매크로
+     class TEST_API AMyActor : public AActor   // 상속 구조
+     {
+         GENERATED_BODY()
 
-  > 리플렉션 기능
+     public:
+         AMyActor();     // 생성자: 변수들 디폴트 설정
 
-- Text() 로 하는 이유
-  > 플랫폼마다 문자열 규격이 다르기 때문에 크로스플랫폼의 문자열 확장을 쓴다.
+     protected:
+         virtual void BeginPlay() override;    // 월드에 스폰 후 실행되는 함수
+
+     public:
+         virtual void Tick(float DeltaTime) override;    // 매 프레임마다 호출되는 함수
+
+     private:
+         // for. 리플렉션(Reflection)/
+         // VisibleAnywhere: 에디터 내에서 보임(몇몇 오브젝트는 수정도 가능)
+         UPROPERTY(VisibleAnywhere)
+         UStaticMeshComponent* Mesh;   // 월드에서 보여질 Mesh
+     };
+     ```
+
+   - MyActor.cpp
+
+     ```cpp
+     #include "MyActor.h"
+
+     AMyActor::AMyActor()
+     {
+         PrimaryActorTick.bCanEverTick = true;
+
+         // Reflection으로 관리되는 프로퍼티
+         // New로 생성되지 않는다. -> 언리얼에서 메모리 자동 관리
+         // TEXT(): 크로스 플랫폼으로 사용 가능(인코딩 문제 해결)
+         Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));   // New
+     }
+
+     ...
+
+     ```
+
+3. Mesh 로드
+
+   |   메시 오른쪽 클릭 + 레퍼런스 경로 복사   |       단축키로 경로 복사       |
+   | :---------------------------------------: | :----------------------------: |
+   | ![copy-reference](res/copy-reference.png) | 의자 메시 클릭 후 `Ctrl` + `C` |
+
+   - MyActor.cpp
+
+     ```cpp
+     #include "MyActor.h"
+
+     AMyActor::AMyActor()
+     {
+         PrimaryActorTick.bCanEverTick = true;
+
+         Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));   // New
+
+         ConstructorHelpers::FObjectFinder<UStaticMesh> SM_Chair(TEXT("StaticMesh'/Game/StarterContent/Props/SM_Chair.SM_Chair'"));   // Mesh 로드, TEXT("<경로>");
+         if (SM_CHAIR.Succeeded())
+         {
+           // 로드 성공할 경우 메시 세팅
+           Mesh->SetStaticMesh(SM_CHAIR.Object);
+         }
+     }
+
+     ...
+
+     ```
+
+4. 에디터 컴파일 or 소스코드 빌드
+
+   - 소스코드 내용을 에디터에 반영한다.
+
+   |               에디터 컴파일               |                  소스코드 빌드                  |
+   | :---------------------------------------: | :---------------------------------------------: |
+   | ![editor-compile](res/editor-compile.png) | ![source-code-build](res/source-code-build.png) |
+
+5. 해당 Actor에 가져온 Mesh 설정
+
+   |                       결과                        |
+   | :-----------------------------------------------: |
+   | ![result-chair-actor](res/result-chair-actor.png) |
+
+---
+
+## Log & Debug
+
+---
