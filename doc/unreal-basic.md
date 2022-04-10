@@ -208,10 +208,10 @@ title: Unreal basic
 | :-------------------------------: |
 | ![debug-mode](res/debug-mode.png) |
 
-|                   DebugGame                    |                DebugGame Editor                |        Development         |              Development Editor               |      Shipping       |
-| :--------------------------------------------: | :--------------------------------------------: | :------------------------: | :-------------------------------------------: | :-----------------: |
-|                   Debug 모드                   |            Debug 모드 + Editor 시작            |        Release 모드        |          Release 모드 + Editor 시작           | 최종 제품 배포 모드 |
-| 아트 리소스가 패키징 안된다. -> 에러 발생 가능 | Debug + DLL을 만들어 Editor 위에서 실행 가능함 | Debug 보다는 최적화된 상태 | Development + DLL을 만들어 Editor 위에서 실행 |                     |
+|                           DebugGame                           |                DebugGame Editor                |        Development         |              Development Editor               |      Shipping       |
+| :-----------------------------------------------------------: | :--------------------------------------------: | :------------------------: | :-------------------------------------------: | :-----------------: |
+|                          Debug 모드                           |            Debug 모드 + Editor 시작            |        Release 모드        |          Release 모드 + Editor 시작           | 최종 제품 배포 모드 |
+| 아트 리소스가 패키징 안된다. -> 따로 패키징 경로를 제공해야함 | Debug + DLL을 만들어 Editor 위에서 실행 가능함 | Debug 보다는 최적화된 상태 | Development + DLL을 만들어 Editor 위에서 실행 |                     |
 
 1. 중단점 추가
 
@@ -235,9 +235,47 @@ title: Unreal basic
 
 ### 실습: 의자를 회전해보자
 
-1. Actor 생성
-2. Static Mesh 컴포넌트 추가
-3. Tick() 작성
-   > FRotator 이용
+1. `Tick()`에 코드 작성
+
+   - `MyActor.h`
+
+     ```cpp
+     ...
+
+     private:
+         UPROPERTY(EditAnywhere)
+         float RotateSpeed = 30.f;    // 회전 속도
+     ```
+
+   - `MyActor.cpp`
+
+     ```cpp
+     ...
+
+     void AMyActor::Tick(float DeltaTime)
+     {
+         Super::Tick(DeltaTime);
+
+         // 인자: FRotator를 이용(or Quaternion 이용 가능)
+         // FRotator(Pitch, Yaw, Roll)
+         // Pitch(Y), Yaw(Z), Roll(X)
+
+         AddActorLocalRotation(FRotator(RotateSpeed * DeltaTime, 0.f, 0.f));  // Pitch(Y) 회전
+         // AddActorLocalRotation(FRotator(0.f, RotateSpeed * DeltaTime, 0.f));  // Yaw(Z) 회전
+         // AddActorLocalRotation(FRotator(0.f, 0.f, RotateSpeed * DeltaTime));  // Roll(X) 회전
+     }
+     ```
+
+2. Hot Reload 기능 이용
+
+   |               에디터 컴파일               |
+   | :---------------------------------------: |
+   | ![editor-compile](res/editor-compile.png) |
+
+3. 결과
+
+   |         Pitch(Y축) 기준 회전          |        Yaw(Z축) 기준 회전         |         Roll(X축) 기준 회전         |
+   | :-----------------------------------: | :-------------------------------: | :---------------------------------: |
+   | ![rotate-pitch](res/rotate-pitch.gif) | ![rotate-yaw](res/rotate-yaw.gif) | ![rotate-roll](res/rotate-roll.gif) |
 
 ---
