@@ -136,12 +136,13 @@ title: Unreal basic
 4. 에디터 컴파일 or 소스코드 빌드
 
    - 소스코드 내용을 에디터에 반영한다.
+     > Hot Reload: 상태를 잃지 않고 변경된 것에 한해 파일을 새로 고침(dll 등)
 
    |               에디터 컴파일               |                  소스코드 빌드                  |
    | :---------------------------------------: | :---------------------------------------------: |
    | ![editor-compile](res/editor-compile.png) | ![source-code-build](res/source-code-build.png) |
 
-5. 해당 Actor에 가져온 Mesh 설정
+5. 해당 Actor에 가져온 Mesh 확인
 
    |                       결과                        |
    | :-----------------------------------------------: |
@@ -150,5 +151,93 @@ title: Unreal basic
 ---
 
 ## Log & Debug
+
+### 실습: 로그 출력해보자
+
+1. MyActor에 로그 출력 코드 작성
+
+   - MyActor.cpp
+
+     ```cpp
+     // 액터가 월드에 스폰되고 호출
+     void AMyActor::BeginPlay()
+     {
+         Super::BeginPlay();   // 상속 구조로 부모 함수 호출
+
+         // 카테고리: LogTemp
+         // 로깅 수준: Warning(노란색)
+         // 형식: TEXT("BeginPlay: %d")
+         // 인자: 3
+         UE_Log(LogTemp, Warning, TEXT("BeginPlay %d"), 3);
+     }
+
+     // 매 프레임마다 호출
+     void AMyActor::Tick(float DeltaTime)
+     {
+         Super::Tick(DeltaTime);   // 상속 구조로 부모 함수 호출
+
+         // 카테고리: LogTemp
+         // 로깅 수준: Error(빨간색)
+         // 형식: TEXT("Tick: %f")
+         // 인자: DeltaTime(이전 프레임과의 시간 간격)
+         UE_LOG(LogTemp, Error, TEXT("Tick: %f"), DeltaTime);
+     }
+     ```
+
+2. 에디터 컴파일 또는 소스코드를 빌드
+
+   - 소스코드 내용을 에디터에 반영한다.
+     > Hot Reload: 상태를 잃지 않고 변경된 것에 한해 파일을 새로 고침(dll 등)
+
+   |               에디터 컴파일               |            소스코드 빌드(`Ctrl`+`B`)            |
+   | :---------------------------------------: | :---------------------------------------------: |
+   | ![editor-compile](res/editor-compile.png) | ![source-code-build](res/source-code-build.png) |
+
+3. 에디터 콘솔 or 파일로 결과 확인
+
+   |                                            에디터 콘솔                                            |            파일(`Saved`-`Logs`)             |
+   | :-----------------------------------------------------------------------------------------------: | :-----------------------------------------: |
+   | ![editor-log-window](res/editor-log-window.png) - ![editor-log-result](res/editor-log-result.png) | ![log-file-result](res/log-file-result.png) |
+
+### 실습: 디버깅 해보자
+
+- (중단점을 걸고) 디버깅을 해보려면 에디터를 끄고 해야 한다.
+- Binary 폴더에 exe 파일 결과가 나온다.
+
+|         디버그 모드 종류          |
+| :-------------------------------: |
+| ![debug-mode](res/debug-mode.png) |
+
+|                   DebugGame                    |                DebugGame Editor                |        Development         |              Development Editor               |      Shipping       |
+| :--------------------------------------------: | :--------------------------------------------: | :------------------------: | :-------------------------------------------: | :-----------------: |
+|                   Debug 모드                   |            Debug 모드 + Editor 시작            |        Release 모드        |          Release 모드 + Editor 시작           | 최종 제품 배포 모드 |
+| 아트 리소스가 패키징 안된다. -> 에러 발생 가능 | Debug + DLL을 만들어 Editor 위에서 실행 가능함 | Debug 보다는 최적화된 상태 | Development + DLL을 만들어 Editor 위에서 실행 |                     |
+
+1. 중단점 추가
+
+   | 해당 줄에서 `F9` 입력 or 중단점 영역에서 추가 |
+   | :-------------------------------------------: |
+   |       ![breakpoint](res/breakpoint.png)       |
+
+2. 언리얼 에디터를 끄고 디버깅 시작
+
+   - 최적화 여부에 따라 디버그 모드 다르게 시작
+
+   |                       `DebugGame Editor`로 시작                       |                        `Development Editor`로 시작                        |
+   | :-------------------------------------------------------------------: | :-----------------------------------------------------------------------: |
+   | ![debug-debugGame-editor-start](res/debug-debugGame-editor-start.png) | ![debug-development-editor-start](res/debug-development-editor-start.png) |
+
+   | 에디터가 실행되고 걸어놓은 중단점에서 에디터 진행이 멈춤 |
+   | :------------------------------------------------------: |
+   |          ![debug-result](res/debug-result.gif)           |
+
+   - 디버그 모드가 중지되면 에디터도 동시에 꺼짐
+
+### 실습: 의자를 회전해보자
+
+1. Actor 생성
+2. Static Mesh 컴포넌트 추가
+3. Tick() 작성
+   > FRotator 이용
 
 ---
