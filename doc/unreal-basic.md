@@ -279,3 +279,266 @@ title: Unreal basic
    | ![rotate-pitch](res/rotate-pitch.gif) | ![rotate-yaw](res/rotate-yaw.gif) | ![rotate-roll](res/rotate-roll.gif) |
 
 ---
+
+## 게임플레이 프레임워크
+
+|          언리얼의 게임 프레임워크           |
+| :-----------------------------------------: |
+| ![game-frame-work](res/game-frame-work.png) |
+
+- 언리얼은 유니티와 다르게 프레임워크가 짜여있다.
+  > 게임은 GameMode와 GameState로 이루어진다.
+  >
+  > Input, Hud, PlayerCameraManager 등 PlayerController에 포함되어있고,
+  >
+  > 게임에 참여하는 사람은 PlayerController로 입력받는다.
+  >
+  > 레벨에 물리적으로 존재할 수 있도록 Pawn에 빙의된다.
+
+### Game Mode
+
+- `Game Mode` 를 이용해 게임 정보를 설정한다.
+  > 게임 안의 신적인 존재
+
+|   `World Setting`-`Game Mode`   |
+| :-----------------------------: |
+| ![game-mode](res/game-mode.png) |
+
+- Default Pawn Class
+  > 게임이 시작되고 플레이어가 움직일 주인공
+- HUD(Head Up Display) Class
+  > 화면에 표시될 UI
+- Player Controller Class
+  > 게임에서 입력을 관리하고 Player의 Pawn을 제어한다.
+- Game State Class
+  > 게임 규칙, 플레이 방식, 상태를 관리
+- Player State Class
+  > 플레이어 정보를 관리
+- Spectator Class
+  > 단순히 동작을 관찰하는 관람객(수동형 플레이어)을 제어
+
+### 실습: 의자를 플레이어로 하는 게임 규칙을 정해보자
+
+1. `Game Mode Base`를 상속받는 MyGameModeBase 클래스 생성
+2. `Pawn`을 상속 받는 MyPawn 클래스 생성
+   > `Pawn`: 빙의하면 `Controller`로 입력 받을 수 있는 Actor
+3. MyPawn에 `Static Mesh Component`를 추가해 의자로 설정해준다.
+
+   - MyPawn.h
+
+   ```cpp
+   ...    // #include ...
+
+   UCLASS()
+   class TEST_API AMyPawn : public APawn
+   {
+       GENERATED_BODY()
+
+   public:
+       AMyPawn();
+
+   protected:
+       virtual void BeginPlay() override;    // from. Actor
+
+   public:
+       virtual void Tick(float DeltaTime) override;  // from. Actor
+
+       // Input을 Binding해 입력을 처리하게 해준다.
+       virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;   // from. Pawn
+
+       UPROPERTY(VisibleAnywhere)
+       UStaticMeshComponent* Mesh;   // for. 의자 Mesh 설정
+   };
+   ```
+
+   - MyPawn.cpp
+
+   ```cpp
+   ...    // #include ...
+
+   AMyPawn::AMyPawn()    // 생성자에서 의자 메시 로드
+   {
+       PrimaryActorTick.bCanEverTick = true;   // Tick 호출할건지
+
+       // New
+       Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+
+       // Root Component 지정
+       RootComponent = Mesh;
+
+       // Load
+       ConstructorHelpers::FObjectFinder<UStaticMesh> SM_CHAIR(TEXT("StaticMesh'/Game/StarterContent/Props/SM_Chair.SM_Chair'"));
+       if (SM_CHAIR.Succeeded())
+       {
+           Mesh->SetStaticMesh(SM_CHAIR.Object);
+       }
+   }
+   ```
+
+4. MyGameModeBase에 MyPawn을 설정
+
+   - MyGameModeBase.h
+
+   ```cpp
+   ...
+
+   UCLASS()
+   class TEST_API AMyGameModeBase : public AGameModeBase
+   {
+       GENERATED_BODY()
+
+   public:
+       AMyGameModeBase();    // 처음엔 비어있고 직접 코드로 넣어야 함
+
+   };
+
+   ```
+
+   - MyGameModeBase.cpp
+
+   ```cpp
+   ...   // #include ...
+   #include "MyPawn.h"   // 해당 스크립트에서 MyPawn을 알려줘야 하므로
+
+   AMyGameModeBase::AMyGameModeBase()
+   {
+       // Game Mode Base 클래스 안의 "Default..."가 존재한다.
+       // Static 객체를 얻어옴(by. Reflection)
+       // Default Pawn은 MyPawn으로 지정
+       DefaultPawnClass = AMyPawn::StaticClass();
+   }
+
+   ```
+
+5. World Setting-Game Mode 를 MyGameModeBase로 설정
+
+   |            MyGameModeBase 설정            |
+   | :---------------------------------------: |
+   |  ![world-setting](res/world-setting.png)  |
+   | ![game-mode-base](res/game-mode-base.png) |
+
+- 결과
+
+| Default Pawn Class 설정되기 전, 빙의 빠져 나온 상태(`F8` 입력) | Default Pawn Class 설정된 후, 빙의 빠져 나온 상태(`F8` 입력) |
+| :------------------------------------------------------------: | :----------------------------------------------------------: |
+|             ![unpossession](res/unpossession.gif)              |     ![my-game-mode-result-2](res/game-mode-result-2.gif)     |
+
+### 실습: Pawn에 Input을 주고 움직여보자
+
+- Unity 입력 vs Unreal 입력
+
+  |                                    Unity                                    |                                                                Unreal                                                                 |
+  | :-------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------: |
+  |   `Update()`에서 Input을 받고 매 프레임마다 관련 로직을 실행하도록 한다.    | `SetUpPlayerInputComponent()` 에서 입력을 바인딩하고 `Project Setting`-`Input` 에서 입력 키들을 맵핑하고 관련 함수를 호출하도록 한다. |
+  | Unity New Input System에서는 언리얼과 동일하게 바인딩해서 적용시킬 수 있다. |                                                                                                                                       |
+
+1. MyPawn에 Input Binding
+
+   - MyPawn.h
+
+   ```cpp
+   ...   // #include ...
+
+   UCLASS()
+   class TEST_API AMyPawn : public APawn
+   {
+       GENERATED_BODY()
+
+   public:
+       AMyPawn();
+
+   protected:
+       virtual void BeginPlay() override;
+
+   public:
+       virtual void Tick(float DeltaTime) override;
+
+       // Input을 Binding하는 함수
+       virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+       void UpDown(float Value);     // Binding될 함수
+       void LeftRight(float Value);  // Binding될 함수
+
+       UPROPERTY(VisibleAnywhere)
+       UStaticMeshComponent* Mesh;   // 의자 메시
+
+       UPROPERTY(VisibleAnywhere)
+       class UFloatingPawnMovement* Movement;    // 이동 관련 컴포넌트
+       // class: 전방 선언
+   };
+
+   ```
+
+   - MyPawn.cpp
+
+   ```cpp
+   ...   // #include ...
+   #include "GameFramework/FloatingPawnMovement.h"   // 헤더에서 전방 선언 후, UFloatingPawnMovement 사용하기 위해 선언
+
+   AMyPawn::AMyPawn()
+   {
+       ... // 이전 코드들과 일치: 메시 생성
+
+       Movement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MOVEMENT"));
+
+       ... // 이전 코드들과 일치: 의자 메시 로드
+   }
+
+   ...   // BeginPlay(), Tick()
+
+   void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+   {
+       // Player Controller 에서 바인딩하면 먼저 선점 가능하다.
+       Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+       // Bind Axis: UpDown(), LeftRight()를 Bind
+       PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AMyPawn::UpDown);
+       PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AMyPawn::LeftRight);
+   }
+
+   void AMyPawn::UpDown(float Value)
+   {
+       // 출력해보면 입력하지 않으면 0도 출력된다.
+       //UE_LOG(LogTemp, Warning, TEXT("UpDown: %f"), Value);
+
+       if (Value == 0.f)
+         return;
+
+       // Parameter: 1) 방향, 2) 크기
+       // Forward 방향으로 Value만큼 이동
+       AddMovementInput(GetActorForwardVector(), Value);
+   }
+
+   void AMyPawn::LeftRight(float Value)
+   {
+       // 출력해보면 입력하지 않으면 0도 출력된다.
+       //UE_LOG(LogTemp, Warning, TEXT("LeftRight: %f"), Value);
+
+       if (Value == 0.f)
+         return;
+
+       // Parameter: 1) 방향, 2) 크기
+       // Right 방향으로 Value만큼 이동
+       AddMovementInput(GetActorRightVector(), Value);
+   }
+
+   ```
+
+2. `Project Setting`-`Input`에서 키 맵핑
+
+   > `PlayerInputComponent->BindAxis(TEXT("맵핑 이름"), ...)`
+   >
+   > 반드시 맵핑 이름과 일치해야 함
+
+   |                      축 매핑 방법                       |
+   | :-----------------------------------------------------: |
+   |       ![project-setting](res/project-setting.png)       |
+   | ![project-setting-input](res/project-setting-input.gif) |
+
+- 결과
+
+  |               의자(= 플레이어) 움직임               |
+  | :-------------------------------------------------: |
+  | ![moving-chair-result](res/moving-chair-result.gif) |
+
+---
