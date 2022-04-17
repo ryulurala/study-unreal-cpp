@@ -542,3 +542,266 @@ title: Unreal basic
   | ![moving-chair-result](res/moving-chair-result.gif) |
 
 ---
+
+## 캐릭터 생성
+
+- Pawn vs Character
+
+  |                       Pawn                        |                                   Character                                   |
+  | :-----------------------------------------------: | :---------------------------------------------------------------------------: |
+  |                                                   |   SkeletalMesh: 뼈대를 이용해 움직일 수 있는 메시 컴포넌트(for. Animation)    |
+  | PawnMovement: Pawn이 움직일 수 있게 하는 컴포넌트 | CharacterMovement: 걷기, 달리기, 점프, 비행 등을 움직일 수 있게 하는 컴포넌트 |
+  |                                                   |         Capsule: 콜리전, 트리거로 사용될 수 있는 캡슐 모양의 컴포넌트         |
+  |                                                   |                    Arrow: 화살표 방향을 나타내는 컴포넌트                     |
+
+### Character Class를 생성해 움직여보자
+
+1. 마켓 스토어에서 Paragon 에셋 다운로드 후 프로젝트에 추가
+
+   |               Paragon: Greystone 추가               |
+   | :-------------------------------------------------: |
+   | ![paragon-greystone-1](res/paragon-greystone-1.png) |
+   | ![paragon-greystone-2](res/paragon-greystone-2.png) |
+
+2. Character Class 생성
+
+   - MyCharacter.h
+
+     ```cpp
+     ... // #include ...
+
+     UCLASS()
+     class TEST_API AMyCharacter : public ACharacter
+     {
+         GENERATED_BODY()
+
+     public:
+         AMyCharacter();
+
+     protected:
+         virtual void BeginPlay() override;
+
+     public:
+         virtual void Tick(float DeltaTime) override;
+
+         virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+         // Input Binding할 함수
+         void UpDown(float Value);
+         void LeftRight(float Value);
+
+         // Mesh, Input 컴포넌트 모두 Character에 포함돼있다.
+     };
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+     ... // #include ...
+
+     AMyCharacter::AMyCharacter()
+     {
+         PrimaryActorTick.bCanEverTick = true;
+
+         // Skeletal Mesh 로드
+         ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_PARAGON(TEXT("SkeletalMesh'/Game/ParagonGreystone/Characters/Heroes/Greystone/Meshes/Greystone.Greystone'"));
+         if (SK_PARAGON.Succeeded())
+         {
+             // Mesh가 이미 상속받은 Character class에 private으로 선언돼있다.
+             GetMesh()->SetSkeletalMesh(SK_PARAGON.Object);
+         }
+     }
+
+     ... // BeginPlay(), Tick()
+
+     void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+     {
+         Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+         // Player Controller 에서 바인딩하면 먼저 선점 가능하다.
+         // Axis 바인딩
+         PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AMyCharacter::UpDown);
+         PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AMyCharacter::LeftRight);
+     }
+
+     void AMyCharacter::UpDown(float Value)
+     {
+         //UE_LOG(LogTemp, Warning, TEXT("UpDown: %f"), Value);
+
+         if (Value == 0.f)
+           return;
+
+         // Parameter: 1) 방향, 2) 크기
+         AddMovementInput(GetActorForwardVector(), Value);
+     }
+
+     void AMyCharacter::LeftRight(float Value)
+     {
+         //UE_LOG(LogTemp, Warning, TEXT("LeftRight: %f"), Value);
+
+         if (Value == 0.f)
+           return;
+
+         // Parameter: 1) 방향, 2) 크기
+         AddMovementInput(GetActorRightVector(), Value);
+     }
+
+     ```
+
+3. MyGameModeBase 수정
+
+   - MyGameModeBase.cpp
+
+     ```cpp
+     #include "MyGameModeBase.h"
+     #include "MyCharacter.h"    // MyPawn -> MyCharacter
+
+     AMyGameModeBase::AMyGameModeBase()
+     {
+         // Pawn이 상위 개념이므로 Character로 설정 가능
+         DefaultPawnClass = AMyCharacter::StaticClass();
+     }
+     ```
+
+- 결과
+
+  |                 파라곤 캐릭터 움직임                  |
+  | :---------------------------------------------------: |
+  | ![mycharacter-result-1](res/mycharacter-result-1.png) |
+  | ![mycharacter-result-2](res/mycharacter-result-2.gif) |
+
+### 카메라를 설정해보자
+
+- Character class 에 컴포넌트 추가
+
+  - Spring
+    > 일종의 셀카봉
+  - Camera
+
+    > 카메라 본체
+
+  - MyCharacter.h
+
+    ```cpp
+    ... // #include ...
+
+    UCLASS()
+    class TEST_API AMyCharacter : public ACharacter
+    {
+        GENERATED_BODY()
+
+      public:
+        // Sets default values for this character's properties
+        AMyCharacter();
+
+        ...
+
+      private:
+        // class: 전방 선언
+        UPROPERTY(VisibleAnywhere)
+        class USpringArmComponent* SpringArm;   // 셀카봉
+
+        UPROPERTY(VisibleAnywhere)
+        class UCameraComponent* Camera;         // 카메라 본체
+    };
+
+    ```
+
+  - MyCharacter.cpp
+
+    ```cpp
+    #include "MyCharacter.h"
+
+    // 전방 선언한 내용들
+    #include "GameFramework/SpringArmComponent.h"   // Spring: 셀카봉
+    #include "Camera/CameraComponent.h"             // Camera: 카메라 본체
+    #include "Components/CapsuleComponent.h"
+
+    AMyCharacter::AMyCharacter()
+    {
+        PrimaryActorTick.bCanEverTick = true;
+
+        // 메시와 다르게 컴포넌트를 추가한 것이기 때문에 직접 추가해줘야 함
+        SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
+        Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
+
+        // 계층 구조로 부모를 정함
+        SpringArm->SetupAttachment(GetCapsuleComponent());
+        Camera->SetupAttachment(SpringArm);
+
+        SpringArm->TargetArmLength = 500.0f;    // 거리
+        SpringArm->SetRelativeRotation(FRotator(-35.0f, 0.0f, 0.0f)); // 회전
+
+        // -88.0f: 땅에서 88.0f 만큼 공중에 떠 있는 위치를 바닥에 붙여놓기 위함
+        // -90.0f: X방향을 월드의 X방향과 맞추기 위함
+        GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
+
+        ...
+    }
+    ```
+
+- 결과
+
+  |             MyCharacter의 계층 구조와 결과              |
+  | :-----------------------------------------------------: |
+  | ![mycharacter-hierarchy](res/mycharacter-hierarchy.png) |
+  |  ![camera-spring-result](res/camera-spring-result.gif)  |
+
+### 마우스를 돌리면 캐릭터가 회전이 되도록 하자
+
+1. Project Setting-Inputd 에서 Axis 맵핑 추가
+
+   |       프로젝트세팅-입력       |
+   | :---------------------------: |
+   | ![yaw-axis](res/yaw-axis.png) |
+
+2. Character Class 코드 작성
+
+   - MyCharacter.h
+
+     ```cpp
+     ...
+
+     public:
+         void UpDown(float Value);
+         void LeftRight(float Value);
+         void Yaw(float Value);    // Yaw Input Binding할 함수
+
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+     ...
+
+     void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+     {
+         Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+         ...
+
+         // Yaw Input Binding
+         PlayerInputComponent->BindAxis(TEXT("Yaw"), this, &AMyCharacter::Yaw);
+     }
+
+     ...
+
+     void AMyCharacter::Yaw(float Value)
+     {
+         // Controller에 Yaw 입력을 가함
+         AddControllerYawInput(Value);
+     }
+
+     ```
+
+- 결과
+
+  |    Use Controller Rotation Yaw 가 체크되어 있어 회전이 가능하다.    |
+  | :-----------------------------------------------------------------: |
+  | ![use-controller-rotation-yaw](res/use-controller-rotation-yaw.png) |
+
+  |                         마우스 Yaw 회전                         |
+  | :-------------------------------------------------------------: |
+  | ![mouse-rotation-yaw-result](res/mouse-rotation-yaw-result.gif) |
+
+---
