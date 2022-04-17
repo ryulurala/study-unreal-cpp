@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -25,5 +25,18 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	void UpDown(float Value);
+	void LeftRight(float Value);
+	void Yaw(float Value);
+
+private:
+	// class: 전방 선언
+
+	UPROPERTY(VisibleAnywhere)
+	class USpringArmComponent* SpringArm;		// 셀카봉
+
+	UPROPERTY(VisibleAnywhere)
+	class UCameraComponent* Camera;		// 카메라
 
 };
