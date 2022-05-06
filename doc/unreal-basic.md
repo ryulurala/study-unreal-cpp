@@ -805,3 +805,72 @@ title: Unreal basic
   | ![mouse-rotation-yaw-result](res/mouse-rotation-yaw-result.gif) |
 
 ---
+
+## 블루프린트 클래스
+
+- 블루프린트(Blueprint)란?
+
+  > 비주얼 스크립트 가능한 시스템으로 에디터 내에서 오브젝트를 정의한다.
+  >
+  > Blueprint는 C++ 보다 10배 가량 느리다.
+  >
+  > C++ 클래스를 BP로 상속 받는 건 가능하지만, BP를 상속받는 C++ 불가
+
+|                 뷰포트(Viewport)                  |                           Construction Script                           |               이벤트 그래프(Event Graph)                |
+| :-----------------------------------------------: | :---------------------------------------------------------------------: | :-----------------------------------------------------: |
+| ![blueprint-viewport](res/blueprint-viewport.png) | ![blueprint-construction-script](res/blueprint-construction-script.png) | ![blueprint-event-graph](res/blueprint-event-graph.png) |
+|         컴포넌트, 메시 등을 확인하고 조작         | 에디터에서 액터가 배치 or 업데이트될 때 사용(게임 플레이 이전 스크립팅) |     게임 플레이에 실행되는 스크립팅을 함(게임 로직)     |
+
+### `C++` MyCharacter를 `블루프린트`로 바꿔보자
+
+1. 블루프린트 클래스 생성
+
+   |          Character를 부모 클래스로 갖는 블루프린트 생성           |
+   | :---------------------------------------------------------------: |
+   | ![create-blueprint-character](res/create-blueprint-character.gif) |
+
+2. MyCharacter Class의 생성자와 비교하며 BP_MyCharacter의 Detail 설정
+
+   - Mesh, 위치, 회전 설정
+
+     |                   Mesh 설정                   |                       위치 조절                       |                       회전 조절                       |
+     | :-------------------------------------------: | :---------------------------------------------------: | :---------------------------------------------------: |
+     | ![mycharacter-mesh](res/mycharacter-mesh.gif) | ![mycharacter-position](res/mycharacter-position.gif) | ![mycharacter-rotation](res/mycharacter-rotation.gif) |
+
+   - Camera, 스프링암 컴포넌트 추가
+
+     |                          컴포넌트 추가                          |                       TargetArm Length, 회전 조절                       |
+     | :-------------------------------------------------------------: | :---------------------------------------------------------------------: |
+     | ![mycharacter-add-component](res/mycharacter-add-component.gif) | ![mycharacter-camera-spring-arm](res/mycharacter-camera-spring-arm.gif) |
+
+   - MyGameModeBase의 Default Pawn을 BP_MyCharacter로 설정
+
+     ```cpp
+     #include "MyGameModeBase.h"
+     #include "MyCharacter.h"
+
+     AMyGameModeBase::AMyGameModeBase()
+     {
+         //DefaultPawnClass = AMyCharacter::StaticClass();    // Static 객체
+
+         static ConstructorHelpers::FClassFinder<ACharacter> BP_CHARACTER(TEXT("Blueprint'/Game/Blueprints/BP_MyCharacter.BP_MyCharacter_C'")); // "_C" Suffix 추가
+         if (BP_CHARACTER.Succeeded())
+         {
+             DefaultPawnClass = BP_CHARACTER.Class;
+         }
+     }
+     ```
+
+3. 이동 관련 함수도 설정
+
+   |                          LeftRight, UpDown, Yaw                           |
+   | :-----------------------------------------------------------------------: |
+   | ![blueprint-leftRight-upDown-yaw](res/blueprint-leftRight-upDown-yaw.png) |
+
+- 결과
+
+  |                   BP MyCharacter 배치 후 이동시키기                   |
+  | :-------------------------------------------------------------------: |
+  | ![mycharacter-blueprint-result](res/mycharacter-blueprint-result.gif) |
+
+---
