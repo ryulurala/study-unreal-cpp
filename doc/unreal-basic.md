@@ -873,4 +873,17 @@ title: Unreal basic
   | :-------------------------------------------------------------------: |
   | ![mycharacter-blueprint-result](res/mycharacter-blueprint-result.gif) |
 
+### `C++` MyCharacter 를 상속받는 `Blueprint` MyCharacter 만들어보자
+
+- C++을 부모 클래스로 하는 Blueprint 클래스를 만들 수 있다.
+
+  - Blueprint를 부모 클래스로 하는 C++ 클래스 생성은 불가능!
+
+- 두 가지 방법 존재
+
+  |      1) 부모 클래스를 지정 -> 블루프린트 클래스 생성      |       2) 블루프린트 클래스 생성 -> 부모 클래스 지정       |
+  | :-------------------------------------------------------: | :-------------------------------------------------------: |
+  | ![blueprint-parent-cpp-1](res/blueprint-parent-cpp-1.gif) | ![blueprint-parent-cpp-2](res/blueprint-parent-cpp-2.gif) |
+  |        부모 클래스를 지정한 후 클래스를 생성한다.         |         클래스 세팅에서 부모 클래스를 지정해준다.         |
+
 ---
