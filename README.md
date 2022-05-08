@@ -8,3 +8,4 @@
 
 1. [OT](doc/ot.md)
 2. [언리얼 기초](doc/unreal-basic.md)
+3. [애니메이션](doc/animation.md)
