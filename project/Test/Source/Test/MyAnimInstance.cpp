@@ -3,6 +3,9 @@
 
 #include "MyAnimInstance.h"
 
+#include "GameFramework/Character.h"
+#include "GameFramework/PawnMovementComponent.h"
+
 void UMyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);		// GENERATE_BODY()에 Super 키워드 존재
@@ -11,5 +14,11 @@ void UMyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (IsValid(MyPawn))
 	{
 		Speed = MyPawn->GetVelocity().Size();
+
+		ACharacter* MyCharacter = Cast<ACharacter>(MyPawn);
+		if (MyCharacter)
+		{
+			IsFalling = MyCharacter->GetMovementComponent()->IsFalling();
+		}
 	}
 }

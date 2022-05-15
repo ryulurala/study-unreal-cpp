@@ -53,6 +53,10 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	// 액션을 바인딩한다.(눌렀다 뗐다 정도)
+	// Jump는 이미 만들어져있다.
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AMyCharacter::Jump);
+
 	// Player Controller 에서 바인딩하면 먼저 선점 가능하다.
 	// Axis 바인딩
 	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AMyCharacter::UpDown);
