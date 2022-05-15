@@ -7,5 +7,5 @@
 - [Total](doc/total.md)
 
 1. [OT](doc/ot/ot.md)
-2. [언리얼 기초](doc/unreal-basic/unreal-basic.md)
+2. [언리얼 엔진 기초](doc/unreal-basic/unreal-basic.md)
 3. [애니메이션](doc/animation/animation.md)
