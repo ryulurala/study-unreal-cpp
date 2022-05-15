@@ -152,3 +152,135 @@ title: Unreal Animation
   | ![animation-blueprint-speed-result](res/animation-blueprint-speed-result.gif) |
 
 ---
+
+## 스테이트 머신(State Machine)
+
+- 스테이트 머신(State Machine) 이란?
+
+  > 각 상태(State)들로 관리할 수 있는 프레임워크
+
+- 스테이트 머신(State Machine)을 쓰는 이유?
+
+  > 애니메이션이 점점 많아질 경웨 기존 방식인 "True/False"로 쓰면 복잡해지기도 하고, 보기도 어렵기 때문에 상태 별로 관리할 수 있도록 사용한다.
+
+  |                           bool(if-else)                           |                     State Machine                     |
+  | :---------------------------------------------------------------: | :---------------------------------------------------: |
+  | ![true-false-blend-animgraph](res/true-false-blend-animgraph.png) | ![state-machine-inside](res/state-machine-inside.png) |
+
+### 스테이트 머신으로 점프를 구현해보자
+
+1. Jumping Transition 조건 설정
+
+   - Jump 키 액션 맵핑
+
+     |                Jump 입력 바인딩 추가                |
+     | :-------------------------------------------------: |
+     | ![jump-action-mapping](res/jump-action-mapping.png) |
+
+   - MyCharacter.cpp
+
+     ```cpp
+
+     ...
+
+     void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+     {
+         Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+         // Action 바인딩
+         // ACharacter에 이미 Jump 함수가 만들어져있다.
+         PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AMyCharacter::Jump);
+
+         // Axis 바인딩
+         ... // UpDown, LeftRight, Yaw
+     }
+
+     ...
+
+     ```
+
+   - MyAnimInstance.h
+
+     ```cpp
+
+     ...
+
+     private:
+         ...
+
+         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+         bool IsFalling;
+
+     ...
+
+     ```
+
+   - MyAnimInstance.cpp
+
+     ```cpp
+
+     ...
+
+     void UMyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+     {
+         Super::NativeUpdateAnimation(DeltaSeconds);    // GENERATE_BODY()에 Super 키워드 존재
+
+         APawn* MyPawn = TryGetPawnOwner();
+         if (IsValid(MyPawn))
+         {
+             Speed = MyPawn->GetVelocity().Size();
+
+             ACharacter* MyCharacter = Cast<ACharacter>(MyPawn);
+             if (MyCharacter)
+             {
+                 // MovementComponent에 IsFalling()이 만들어져있다.
+                 IsFalling = MyCharacter->GetMovementComponent()->IsFalling();
+             }
+         }
+     }
+
+     ```
+
+2. State Machine 생성, 각 State 추가
+
+   - State Machine 생성
+
+     |          State Machine 생성 및 각 State 추가          |
+     | :---------------------------------------------------: |
+     | ![create-state-machine](res/create-state-machine.gif) |
+
+   |                Ground                 |                  Jump Start                   |                 Jumping                 |                 Jump End                  |
+   | :-----------------------------------: | :-------------------------------------------: | :-------------------------------------: | :---------------------------------------: |
+   |          땅에 발이 붙은 상태          |              점프 시작하는 시점               |            공중에 있는 상태             |            땅에 착지하는 시점             |
+   |      대기, 걷기 애니메이션 추가       |           점프 시작 애니메이션 추가           |    공중에서 떨어지는 애니메이션 추가    |       땅에 착지하는 애니메이션 추가       |
+   | ![ground-state](res/ground-state.png) | ![jump-start-state](res/jump-start-state.png) | ![jumping-state](res/jumping-state.png) | ![jump-end-state](res/jump-end-state.png) |
+
+3. Transition 조건 적용: 2가지 방법으로 전환
+
+   |                 Transition 생성                 |
+   | :---------------------------------------------: |
+   | ![create-transition](res/create-transition.gif) |
+
+   - Time Remaining (ratio) 이용
+
+     > 현재 State의 애니메이션 에셋의 남은 시간 길이의 비율을 이용해 다음 State로 전환되도록 설정해준다.
+
+     |            `Jump Start State` -> `Jumping State` Transition             |
+     | :---------------------------------------------------------------------: |
+     | ![jump-start-jumping-transition](res/jump-start-jumping-transition.png) |
+
+   - Automatic Rule Based on Sequence Player in State 이용
+
+     > 가장 영향력이 큰 노드의 남은 시간을 이용해 자동으로 룰을 설정을 해준다.
+
+     |           `Jumping State` -> `Jump End State` Transition            |
+     | :-----------------------------------------------------------------: |
+     | ![jumping-jump-end-transition](res/jumping-jump-end-transition.png) |
+
+- 결과
+
+  | `Ground` -> `Jump Start` -> `Jumping` -> `Jump End` -> `Ground` |
+  | :-------------------------------------------------------------: |
+  | ![state-machine-jump-result](res/state-machine-jump-result.gif) |
+
+---
