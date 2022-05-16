@@ -5,8 +5,8 @@ title: Unreal Animation
 Table of Contents
 
 - [애니메이션 기초](#애니메이션-기초)
-
 - [스테이트 머신(State Machine)](#스테이트-머신state-machine)
+- [애니메이션 몽타주(Animation Montage)](#애니메이션-몽타주animation-montage)
 
 ## 애니메이션 기초
 
@@ -288,5 +288,154 @@ Table of Contents
   | `Ground` -> `Jump Start` -> `Jumping` -> `Jump End` -> `Ground` |
   | :-------------------------------------------------------------: |
   | ![state-machine-jump-result](res/state-machine-jump-result.gif) |
+
+---
+
+## 애니메이션 몽타주(Animation Montage)
+
+- 애니메이션 몽타주(Animation Montage)
+  > 애니메이션을 편집해서 퀄리티 있는 애니메이션을 만드는 기법
+  >
+  > 특정 지점(노티파이)에 사운드, 이팩트를 넣기 편리하고, 섹션별로 나누어 콤보 애니메이션도 만들 수 있다.
+
+### 콤보 애니메이션을 만들어보자
+
+1. 메시의 에셋 생성
+
+   |               애니메이션 몽타주 생성                |
+   | :-------------------------------------------------: |
+   | ![create-anim-montage](res/create-anim-montage.gif) |
+
+2. 몽타주 섹션에 애니메이션 에셋 추가
+
+   |           Attack_A, Attack_B, Attack_C 추가           |
+   | :---------------------------------------------------: |
+   | ![add-attack-animation](res/add-attack-animation.gif) |
+
+3. Attack 입력 키 추가
+
+   - Attack 키 액션 맵핑
+
+     |                 Attack 입력 바인딩 추가                 |
+     | :-----------------------------------------------------: |
+     | ![attack-action-mapping](res/attack-action-mapping.png) |
+
+   - MyCharacter.h
+
+     ```cpp
+
+     ...
+     public:
+         ...
+
+         void Attack();
+
+     ...
+
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+
+     ...
+     #include "MyAnimInstance.h"
+
+     ...
+
+     void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+     {
+         Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+         // 액션을 바인딩한다.(눌렀다 뗐다 정도)
+         ...   // Jump
+
+         // Attack Binding
+         PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AMyCharacter::Attack);
+
+         // Player Controller 에서 바인딩하면 먼저 선점 가능하다.
+         ... // Left, Right, Yaw
+     }
+
+     ...
+
+     void AMyCharacter::Attack()
+     {
+         UMyAnimInstance* AnimInstance = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
+         if (AnimInstance)
+         {
+             AnimInstance->PlayAttackMontage();
+         }
+     }
+
+     ```
+
+   - MyAnimInstance.h
+
+     ```cpp
+
+     ...
+
+     public:
+         UMyAnimInstance();    // Montage를 가져오는 시점
+
+         ...
+
+       void PlayAttackMontage();    // Attack Montage 실행
+
+     private:
+         ...
+
+         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+         UAnimMontage* AttackMontage;
+
+     ...
+
+     ```
+
+   - MyAnimInstance.cpp
+
+     ```cpp
+
+     ...
+
+     UMyAnimInstance::UMyAnimInstance()
+     {
+         static ConstructorHelpers::FObjectFinder<UAnimMontage> AM(TEXT("AnimMontage'/Game/Animations/Greystone_Skeleton_Montage.Greystone_Skeleton_Montage'"));
+         if (AM.Succeeded())
+         {
+             AttackMontage = AM.Object;
+         }
+     }
+
+     ...
+
+     void UMyAnimInstance::PlayAttackMontage()
+     {
+         // 몽타주 중복 실행 방지
+         if (!Montage_IsPlaying(AttackMontage))
+         {
+             // 몽타주 실행, 재생속도: 1.0f
+             Montage_Play(AttackMontage, 1.0f);
+         }
+     }
+
+     ```
+
+4. Default Slot 추가(필수!)
+
+   > `Default Slot`을 추가해 몽타주가 실행 가능하도록 한다.
+   >
+   > 여러 개 추가 가능하며, 특정 State 뒤에 위치시켜 해당 State를 진행 중에 몽타주가 실행할 수 있게 한다.
+
+   | 모든 애니메이션에서 몽타주가 바로 실행되도록 위치 지정 |
+   | :----------------------------------------------------: |
+   |     ![add-default-slot](res/add-default-slot.png)      |
+
+- 결과
+
+  |                    3단 공격 애니메이션                    |
+  | :-------------------------------------------------------: |
+  | ![combo-animation-result](res/combo-animation-result.gif) |
 
 ---
