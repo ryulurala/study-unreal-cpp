@@ -30,6 +30,8 @@ public:
 	void LeftRight(float Value);
 	void Yaw(float Value);
 
+	void Attack();
+
 private:
 	// class: 전방 선언
 
