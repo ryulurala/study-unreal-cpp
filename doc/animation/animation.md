@@ -683,3 +683,136 @@ Table of Contents
   | ![separate-attack-section-result](res/separate-attack-section-result.gif) |
 
 ---
+
+## 블렌드 스페이스(Blend Space)
+
+- 블렌드 스페이스(Blend Space)
+  > 입력값에 따라서 여러 개의 애니메이션을 서로 섞어서 실행하도록 한다.
+  >
+  > 클라이언트에서만 사용되는 기술이고, 서버에서는 어느 방향으로 얼마나 이동하는지에 대해서만 알고 있다.
+  >
+  > ex) 상하좌우 이동 애니메이션을 섞어서 자연스럽게 이동할 수 있게 한다.
+
+### 블렌드 스페이스를 이용해 움직이는 애니메이션을 섞어보자
+
+1. 블렌드 스페이스 생성
+
+   - 생성
+
+     |               블렌드 스페이스 생성                |
+     | :-----------------------------------------------: |
+     | ![create-blend-space](res/create-blend-space.gif) |
+
+   - 설정
+
+     |          X축, Y축 Value, 애니메이션 보간 시간 설정          | 블렌딩할 애니메이션 추가(Preview: `Shift` + `LMB`)  |
+     | :---------------------------------------------------------: | :-------------------------------------------------: |
+     | ![x-y-interpolation-value](res/x-y-interpolation-value.png) | ![add-blend-animation](res/add-blend-animation.gif) |
+
+2. MyCharacter 코드 수정
+
+   > Axis Input Value를 캐싱해둔다.
+
+   - MyCharacter.h
+
+     ```cpp
+
+     ...
+
+     public:
+         UPROPERTY()
+         float UpDownValue = 0;
+
+         UPROPERTY()
+         float LeftRightValue = 0;
+
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+
+     ...
+
+     void AMyCharacter::UpDown(float Value)
+     {
+         UpDownValue = Value;    // 입력된 Value 기록
+
+         ...
+     }
+
+     void AMyCharacter::LeftRight(float Value)
+     {
+         LeftRightValue = Value;   // 입력된 Value 기록
+
+         ...
+     }
+
+     ...
+
+     ```
+
+3. MyAnimInstance 코드 수정
+
+   > MyCharacter의 Axis Input Value를 가져와서 Blend Space에 사용
+
+   - MyAnimInstance.h
+
+     ```cpp
+
+     ...
+
+     private:
+         ...
+
+         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+         float Horizontal;
+
+         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+         float Vertical;
+     ```
+
+   - MyAnimInstance.cpp
+
+     ```cpp
+
+     ...
+
+     void UMyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+     {
+         Super::NativeUpdateAnimation(DeltaSeconds);   // GENERATE_BODY()에 Super 키워드 존재
+
+         APawn* MyPawn = TryGetPawnOwner();
+         if (IsValid(MyPawn))
+         {
+             Speed = MyPawn->GetVelocity().Size();
+
+             AMyCharacter* MyCharacter = Cast<AMyCharacter>(MyPawn);
+             if (MyCharacter)
+             {
+                 IsFalling = MyCharacter->GetMovementComponent()->IsFalling();
+
+                 // Blend Space에서 사용할 Value 캐싱
+                 Vertical = MyCharacter->UpDownValue;
+                 Horizontal = MyCharacter->LeftRightValue;
+             }
+         }
+     }
+
+     ...
+
+     ```
+
+4. 애니메이션 블루프린트 수정
+
+   |                      Animation Blueprint에서 Blend Space 사용                       |
+   | :---------------------------------------------------------------------------------: |
+   | ![use-blend-space-animation-blueprint](res/use-blend-space-animation-blueprint.png) |
+
+- 결과
+
+  |             블렌딩되는 상하좌우 이동 애니메이션             |
+  | :---------------------------------------------------------: |
+  | ![move-blend-space-result](res/move-blend-space-result.gif) |
+
+---
