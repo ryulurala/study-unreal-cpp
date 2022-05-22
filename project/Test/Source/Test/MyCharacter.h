@@ -32,6 +32,9 @@ public:
 
 	void Attack();
 
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 private:
 	// class: 전방 선언
 
@@ -40,5 +43,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* Camera;		// 카메라
+
+	UPROPERTY()
+	class UMyAnimInstance* AnimInstance;
+
+	UPROPERTY(VisibleAnywhere, Category = Pawn)
+	bool IsAttacking = false;
 
 };
