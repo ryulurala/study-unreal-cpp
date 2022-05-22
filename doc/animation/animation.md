@@ -534,3 +534,152 @@ Table of Contents
   |   ![attack-delegate-result](res/attack-delegate-result.gif)   |
 
 ---
+
+## 애니메이션 노티파이(Animation Notify)
+
+- 애니메이션 노티파이(Animation Notify)
+  > 애니메이션이 진행되고 있는 특정 프레임에 어떠한 이벤르를 실행시킬 때 사용
+  >
+  > ex) 발 소리, 이팩트 생성 등등
+
+### 애니메이션 노티파이로 피격 이벤트를 추가해보자
+
+1. 애니메이션 노티파이 추가
+
+   |           피격 이벤트 추가: `AttackHit`           |
+   | :-----------------------------------------------: |
+   | ![create-anim-notify](res/create-anim-notify.gif) |
+
+2. MyAnimInstance 코드 수정
+
+   - MyAnimInstnace.h
+
+     ```cpp
+
+     ...
+
+     private:
+         // "AnimNotify_[Notify 이름]"으로 함수 이름을 지어야 한다.
+         UFUNCTION()
+         void AnimNotify_AttackHit();
+
+     ...
+
+     ```
+
+   - MyAnimInstance.cpp
+
+     ```cpp
+
+     ...
+
+     void UMyAnimInstance::AnimNotify_AttackHit()
+     {
+         // 테스트 로그 출력
+         UE_LOG(LogTemp, Log, TEXT("AnimNotify_AttackHit!!"));
+     }
+
+     ```
+
+- 결과
+
+  |                           Log 출력                            |
+  | :-----------------------------------------------------------: |
+  | ![attack-hit-notify-result](res/attack-hit-notify-result.gif) |
+
+### 공격 타수를 1타로 수정해보자
+
+1. Section 나누기
+
+   |              Attack0, Attack1, Attack2로 분리               |
+   | :---------------------------------------------------------: |
+   | ![separate-attack-section](res/separate-attack-section.png) |
+
+2. MyAnimInstance 코드 수정
+
+   - MyAnimInstance.h
+
+     ```cpp
+
+     ...
+
+     public:
+         // 다음 몽타주 섹션으로 이동
+         void JumpToSection(int32 SectionIndex);
+
+         FName GetAttackMontageName(int32 SectionIndex);
+
+     ...
+
+     ```
+
+   - MyAnimInstance.cpp
+
+     ```cpp
+
+     ...
+
+     void UMyAnimInstance::JumpToSection(int32 SectionIndex)
+     {
+         FName Name = GetAttackMontageName(SectionIndex);
+
+         // 몽타주 섹션 이동(in UAnimInstance)
+         Montage_JumpToSection(Name, AttackMontage);
+     }
+
+     FName UMyAnimInstance::GetAttackMontageName(int32 SectionIndex)
+     {
+         // FString -> FName
+         return FName(*FString::Printf(TEXT("Attack%d"), SectionIndex));
+     }
+
+     ...
+
+     ```
+
+3. MyCharacter 코드 수정
+
+   - MyCharacter.h
+
+     ```cpp
+
+     ...
+
+     private:
+         ...
+
+         UPROPERTY()
+         int32 AttackIndex = 0;  // 현재 공격 섹션 인덱스
+
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+
+     ...
+
+     void AMyCharacter::Attack()
+     {
+         if (IsAttacking)
+             return;
+
+         AnimInstance->PlayAttackMontage();
+
+         AnimInstance->JumpToSection(AttackIndex);   // 그 다음 섹션을 실행하도록 한다.
+         AttackIndex = (AttackIndex + 1) % 3;    // 0, 1, 2
+
+         IsAttacking = true;
+     }
+
+     ...
+
+     ```
+
+- 결과
+
+  |                 공격 타수가 1타로 변경 + 다음 타수로 이동                 |
+  | :-----------------------------------------------------------------------: |
+  | ![separate-attack-section-result](res/separate-attack-section-result.gif) |
+
+---
