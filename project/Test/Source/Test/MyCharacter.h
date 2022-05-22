@@ -52,4 +52,11 @@ private:
 
 	UPROPERTY()
 	int32 AttackIndex = 0;
+
+public:
+	UPROPERTY()
+	float UpDownValue = 0;
+
+	UPROPERTY()
+	float LeftRightValue = 0;
 };

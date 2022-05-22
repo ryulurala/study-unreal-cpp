@@ -71,10 +71,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AMyCharacter::UpDown(float Value)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("UpDown: %f"), Value);
-
-	if (Value == 0.f)
-		return;
+	UpDownValue = Value;
 
 	// Parameter: 1) 방향, 2) 크기
 	AddMovementInput(GetActorForwardVector(), Value);
@@ -82,10 +79,7 @@ void AMyCharacter::UpDown(float Value)
 
 void AMyCharacter::LeftRight(float Value)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("LeftRight: %f"), Value);
-
-	if (Value == 0.f)
-		return;
+	LeftRightValue = Value;
 
 	// Parameter: 1) 방향, 2) 크기
 	AddMovementInput(GetActorRightVector(), Value);
