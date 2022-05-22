@@ -439,3 +439,98 @@ Table of Contents
   | ![combo-animation-result](res/combo-animation-result.gif) |
 
 ---
+
+## 델레게이트(Delegate)
+
+- 델레게이트란(Delegate)?
+  > "대리자" 라는 뜻으로, 함수 포인터로서 작용되고 지정된 함수를 호출해준다.
+  >
+  > 델레게이트를 쓰면 매 프레임마다 체크할 필요가 없고 특정 시점에 함수를 실행할 수 있도록 가능하다.
+  >
+  > ex) "A 함수가 끝날 때, B 함수를 호출해주세요."라면 매 틱마다 A 함수가 끝났는지 계속 검사하는 게 아니라 델레게이트로 B 함수를 A가 끝났을 경우에 델레게이트로 B 함수를 호출하도록 한다.
+
+### 델레게이트를 이용해 공격 중인지 검사해보자
+
+1. MyCharacter 코드 수정
+
+   - MyCharacter.h
+
+     ```cpp
+
+     ...
+
+     public:
+         // 델레게이트가 실행시켜줄 함수
+         UFUNCTION()
+         void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+     private:
+         ...
+
+         UPROPERTY()
+         class UMyAnimInstance* AnimInstance;
+
+         UPROPERTY(VisibleAnywhere, Category = Pawn)
+         bool IsAttacking = false;
+
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+
+     ...
+
+     // 추후에 수명 주기에 따라 PostInitializeComponents에 추가해도 될 듯 하다.
+     void AMyCharacter::BeginPlay()
+     {
+         Super::BeginPlay();
+
+         AnimInstance = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
+         AnimInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::OnAttackMontageEnded);
+     }
+
+     ...
+
+     void AMyCharacter::Attack()
+     {
+         if (IsAttacking)
+             return;
+
+         AnimInstance->PlayAttackMontage();
+
+         IsAttacking = true;
+     }
+
+     // 델레게이트가 실행시켜줄 함수
+     void AMyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+     {
+         IsAttacking = false;
+     }
+     ```
+
+2. MyAnimInstance 코드 수정
+
+   - MyAnimInstance.cpp
+
+     ```cpp
+
+     ...
+
+     void UMyAnimInstance::PlayAttackMontage()
+     {
+         // 몽타주가 플레이 중인지 체크 -> 체크할 필요 X
+         // if (!Montage_IsPlaying(AttackMontage))
+
+         Montage_Play(AttackMontage, 1.0f);
+     }
+
+     ```
+
+- 결과
+
+  | 공격 중: `IsAttacking(true)`, 공격 완료: `IsAttacking(false)` |
+  | :-----------------------------------------------------------: |
+  |   ![attack-delegate-result](res/attack-delegate-result.gif)   |
+
+---
