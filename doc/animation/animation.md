@@ -7,6 +7,9 @@ Table of Contents
 - [애니메이션 기초](#애니메이션-기초)
 - [스테이트 머신(State Machine)](#스테이트-머신state-machine)
 - [애니메이션 몽타주(Animation Montage)](#애니메이션-몽타주animation-montage)
+- [델레게이트(Delegate)](#델레게이트delegate)
+- [애니메이션 노티파이(Animation Notify)](#애니메이션-노티파이animation-notify)
+- [블렌드 스페이스(Blend Space)](#블렌드-스페이스blend-space)
 
 ## 애니메이션 기초
 
