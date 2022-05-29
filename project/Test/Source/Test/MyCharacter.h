@@ -16,6 +16,8 @@ public:
 	AMyCharacter();
 
 protected:
+	virtual void PostInitializeComponents() override;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -31,6 +33,7 @@ public:
 	void Yaw(float Value);
 
 	void Attack();
+	void AttackCheck();
 
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);

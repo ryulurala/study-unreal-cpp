@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "MyAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -35,14 +36,23 @@ AMyCharacter::AMyCharacter()
 	}
 }  
 
+void AMyCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	AnimInstance = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
+	if (AnimInstance)
+	{
+		AnimInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::OnAttackMontageEnded);
+		AnimInstance->OnAttackHit.AddUObject(this, &AMyCharacter::AttackCheck);
+	}
+}
+
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AnimInstance = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
-	AnimInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::OnAttackMontageEnded);
-		
 }
 
 // Called every frame
@@ -101,6 +111,48 @@ void AMyCharacter::Attack()
 	AttackIndex = (AttackIndex + 1) % 3;
 
 	IsAttacking = true;
+}
+
+void AMyCharacter::AttackCheck()
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params(NAME_None, false, this);	// 태그 이름, 디테일한 판정인지, 무시할 액터
+
+	float AttackRange = 100.0f;
+	float AttackRadius = 50.0f;
+
+	bool bResult = GetWorld()->SweepSingleByChannel(
+		OUT HitResult,		// 충돌한 결과물
+		GetActorLocation(),	// 현재 액터의 위치부터
+		GetActorLocation() + GetActorForwardVector() * AttackRange,		// 액터의 앞 방향에서 AttachRange까지
+		FQuat::Identity,		// 회전 없이
+		ECollisionChannel::ECC_GameTraceChannel2,	// "Config/DefaultEngine.ini" 설정 파일 참고
+		FCollisionShape::MakeSphere(AttackRadius),	// AttackRadius 만큼의 구체로 
+		Params		// 위에 정의한 콜리전 파라미터
+	);
+
+	if (bResult && HitResult.Actor.IsValid())
+	{
+		UE_LOG(LogTemp, Log, TEXT("Hit Actor: %s"), *HitResult.Actor->GetName());
+	}
+
+	// 디버깅
+	FVector Direction = GetActorForwardVector() * AttackRange;
+	FVector Center = GetActorLocation() + Direction * 0.5f;	
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	FQuat Rotation = FRotationMatrix::MakeFromZ(Direction).ToQuat();	// 객체의 Z를 공격 방향으로 설정(= Pitch: 90도)
+	FColor DrawColor = bResult ? FColor::Green : FColor::Red;	// 충돌 시 초록, 기본은 빨강
+
+	DrawDebugCapsule(
+		GetWorld(),
+		Center,			// 생성할 위치
+		HalfHeight,		// Capsule의 절반 높이
+		AttackRadius,	// Capsule의 반지름
+		Rotation,		// 회전
+		DrawColor,		// 색깔
+		false,			// 지속적으로 보여줄 건지
+		2.0f			// 2초 동안만 보여줌
+	);
 }
 
 void AMyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
