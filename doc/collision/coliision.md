@@ -6,6 +6,7 @@ Table of Contents
 
 - [충돌 기초](#충돌-기초)
 - [소켓 실습](#소켓-실습)
+- [아이템 줍기](#아이템-줍기)
 
 ## 충돌 기초
 
@@ -352,5 +353,137 @@ Table of Contents
   |    `BeginPlay()`에 헬름이 장착된다.     |
   | :-------------------------------------: |
   | ![socket-result](res/socket-result.gif) |
+
+---
+
+## 아이템 줍기
+
+|                        두 오브젝트 간 필터 테이블                        |
+| :----------------------------------------------------------------------: |
+| ![object-collision-filter-table](res/object-collision-filter-table.jpeg) |
+
+### 떨어진 헬름을 주워보자
+
+1. 콜리전 채널을 생성
+
+   - 채널 추가
+
+     |                    `MyCollectible` 채널 추가                    |
+     | :-------------------------------------------------------------: |
+     | ![add-mycollectible-channel](res/add-mycollectible-channel.png) |
+
+   - Preset 추가
+
+     |                  `MyCollectible` 프로파일 추가                  |
+     | :-------------------------------------------------------------: |
+     | ![add-mycollectible-profile](res/add-mycollectible-profile.png) |
+
+     |      `MyCharacter` 프로파일 수정(for. 두 오브젝트 충돌 정보)      |
+     | :---------------------------------------------------------------: |
+     | ![modify-mycharacter-profile](res/modify-mycharacter-profile.png) |
+
+2. `MyHelm`에 충돌 영역(ex. Box) 생성
+
+   - MyHelm.h
+
+     ```cpp
+
+     ...
+
+     protected:
+         // 액터의 컴포넌트 초기화 완료 후 실행되는 함수
+         virtual void PostInitializeComponents() override;
+
+     private:
+         UFUNCTION()   // 언리얼이 관리하는 매크로
+         void OnCharacterOverlap(UPrimitiveComponent* OverlappedComop, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+     public:
+         ...
+
+         UPROPERTY(VisibleAnywhere)
+         class UBoxComponent* Trigger;
+
+     ...
+
+     ```
+
+   - MyHelm.cpp
+
+     ```cpp
+     #include "MyHelm.h"
+
+     #include "MyCharacter.h"
+     #include "Components/BoxComponent.h"
+
+     AMyHelm::AMyHelm()
+     {
+         ...
+
+         // Box Component 생성
+         Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("TRIGGER"));
+
+         ...
+
+         // 계층 구조로 구성
+         // - Helm
+         //   - Trigger
+         Helm->SetupAttachment(RootComponent);
+         Trigger->SetupAttachment(Helm);
+
+         ...
+
+         // 콜리전 프로파일 설정
+         Trigger->SetCollisionProfileName(TEXT("MyCollectible"));
+         Trigger->SetBoxExtent(FVector(30.0f, 30.0f, 30.0f));
+     }
+
+     void AMyHelm::PostInitializeComponents()
+     {
+         Super::PostInitializeComponents();
+
+         // 충돌 이벤트 발생 시 실행될 함수 바인딩
+         Trigger->OnComponentBeginOverlap.AddDynamic(this, &AMyHelm::OnCharacterOverlap);
+     }
+
+     void AMyHelm::OnCharacterOverlap(UPrimitiveComponent* OverlappedComop, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+     {
+         // 충돌한 액터 캐스팅
+         AMyCharacter* MyCharacter = Cast<AMyCharacter>(OtherActor);
+         if (MyCharacter)
+         {
+             FName HelmSocket(TEXT("Helm"));
+
+             // 캐릭터의 "Helm" 소켓에 부착
+             AttachToComponent(MyCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HelmSocket);
+         }
+     }
+
+     ```
+
+3. MyCharacter 코드 수정
+
+   - MyCharacter.cpp
+
+     ```cpp
+     void AMyCharacter::BeginPlay()
+     {
+         Super::BeginPlay();
+
+         // 기존 헬름 장착 코드 삭제
+         //auto CurrentHelm = GetWorld()->SpawnActor<AMyHelm>(FVector::ZeroVector, FRotator::ZeroRotator);
+         //if (CurrentHelm)
+         //{
+         // FName HelmSocket(TEXT("Helm"));
+         // CurrentHelm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HelmSocket);
+         //}
+     }
+     ```
+
+- 결과
+
+  |              헬름과 충돌하면 캐릭터 머리에 헬름이 장착됨              |
+  | :-------------------------------------------------------------------: |
+  | ![attach-helm-collision-result](res/attach-helm-collision-result.gif) |
 
 ---
