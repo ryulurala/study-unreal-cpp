@@ -52,9 +52,13 @@ Table of Contents
 
    > 액터가 사용할 콜리전 프로파일 정보
 
-   |                     MyCharacter Preset 생성                     | 다른 프리셋에서(ex. `OverlapAll`, ...) MyCharacter 콜리전 반응 설정(추후 버그 방지) |
-   | :-------------------------------------------------------------: | :---------------------------------------------------------------------------------: |
-   | ![create-mycharacter-preset](res/create-mycharacter-preset.png) |               ![other-preset-settings](res/other-preset-settings.gif)               |
+   |                     MyCharacter Preset 생성                     |
+   | :-------------------------------------------------------------: |
+   | ![create-mycharacter-preset](res/create-mycharacter-preset.png) |
+
+   | 다른 프리셋에서(ex. `OverlapAll`, ...) MyCharacter 콜리전 반응 설정(추후 버그 방지) |
+   | :---------------------------------------------------------------------------------: |
+   |               ![other-preset-settings](res/other-preset-settings.gif)               |
 
    - 콜리전 켜짐
 
@@ -333,13 +337,14 @@ Table of Contents
      {
          Super::BeginPlay();
 
-         // Socket Name
-         FName HelmSocket(TEXT("Helm"));
 
          // 액터 생성 및 소켓에 붙이기
          auto CurrentHelm = GetWorld()->SpawnActor<AMyHelm>(FVector::ZeroVector, FRotator::ZeroRotator);
          if (CurrentHelm)
          {
+             // Socket Name
+             FName HelmSocket(TEXT("Helm"));
+
              CurrentHelm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HelmSocket);
          }
      }
