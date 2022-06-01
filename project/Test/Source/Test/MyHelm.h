@@ -15,7 +15,17 @@ public:
 	// Sets default values for this actor's properties
 	AMyHelm();
 
+protected:
+	virtual void PostInitializeComponents() override;
+
+private:
+	UFUNCTION()
+	void OnCharacterOverlap(UPrimitiveComponent* OverlappedComop, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Helm;
+
+	UPROPERTY(VisibleAnywhere)
+	class UBoxComponent* Trigger;
 };
