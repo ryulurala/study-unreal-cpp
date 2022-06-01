@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "MyAnimInstance.h"
 #include "DrawDebugHelpers.h"
+#include "MyHelm.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -53,6 +54,13 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FName HelmSocket(TEXT("Helm"));
+
+	auto CurrentHelm = GetWorld()->SpawnActor<AMyHelm>(FVector::ZeroVector, FRotator::ZeroRotator);
+	if (CurrentHelm)
+	{
+		CurrentHelm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HelmSocket);
+	}
 }
 
 // Called every frame
