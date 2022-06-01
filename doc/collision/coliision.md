@@ -5,6 +5,7 @@ title: Unreal Collision
 Table of Contents
 
 - [충돌 기초](#충돌-기초)
+- [소켓 실습](#소켓-실습)
 
 ## 충돌 기초
 
@@ -236,5 +237,120 @@ Table of Contents
   |            드로잉 디버그, 충돌 시 로그 출력             |
   | :-----------------------------------------------------: |
   | ![attack-channel-result](res/attack-channel-result.gif) |
+
+---
+
+## 소켓 실습
+
+- 소켓이란?
+  > 캐릭터의 본에 오브젝트를 붙일 때 사용해 애니메이션이 실행돼도 같이 움직인다.
+  >
+  > ex) 무기, 망토, 모자, 방어구 등
+
+### 머리 방어구를 장착 해보자
+
+1. 소켓 추가
+
+   | 페르소나(Persona)에서 소켓 추가 후, 프리뷰 메시를 추가해 소켓 트랜스폼 수정 |
+   | :-------------------------------------------------------------------------: |
+   |      ![create-socket-preview-mesh](res/create-socket-preview-mesh.gif)      |
+
+2. MyHelm 액터 추가
+
+   > 헬름 액터를 만들고 메시만 갈아끼울 수 있도록 구성한다.
+
+   - MyHelm.h
+
+     ```cpp
+     #pragma once
+
+     #include "CoreMinimal.h"
+     #include "GameFramework/Actor.h"
+     #include "MyHelm.generated.h"
+
+     UCLASS()
+     class TEST_API AMyHelm : public AActor
+     {
+       GENERATED_BODY()
+
+     public:
+       AMyHelm();
+
+     public:
+         UPROPERTY(VisibleAnywhere)
+         UStaticMeshComponent* Helm;
+     };
+     ```
+
+   - MyHelm.cpp
+
+     ```cpp
+     #include "MyHelm.h"
+
+     AMyHelm::AMyHelm()
+     {
+         PrimaryActorTick.bCanEverTick = false;
+
+         // 컴포넌트 생성
+         Helm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HELM"));
+
+         // 헬름 로드
+         static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_HELM(TEXT("StaticMesh'/Game/ParagonGreystone/Characters/Heroes/Greystone/Skins/WhiteTiger/Meshes/SM_Greystone_TigerHelm.SM_Greystone_TigerHelm'"));
+         if (SM_HELM.Succeeded())
+         {
+             Helm->SetStaticMesh(SM_HELM.Object);
+         }
+
+         // 충돌 설정
+         Helm->SetCollisionProfileName(TEXT("NoCollision"));
+     }
+
+     ```
+
+3. MyCharacter 소켓에 부착
+
+   - MyCharacter.h
+
+     ```cpp
+
+     ...
+
+     public:
+         ...
+
+         UPROPERTY(VisibleAnywhere)
+         UStaticMeshComponent* Helm;
+     ```
+
+   - MyCharacter.cpp
+
+     ```cpp
+
+     ...
+
+     void AMyCharacter::BeginPlay()
+     {
+         Super::BeginPlay();
+
+         // Socket Name
+         FName HelmSocket(TEXT("Helm"));
+
+         // 액터 생성 및 소켓에 붙이기
+         auto CurrentHelm = GetWorld()->SpawnActor<AMyHelm>(FVector::ZeroVector, FRotator::ZeroRotator);
+         if (CurrentHelm)
+         {
+             CurrentHelm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HelmSocket);
+         }
+     }
+
+     ...
+
+     ```
+
+- 결과
+
+  |    `BeginPlay()`에 헬름이 장착된다.     |
+  | :-------------------------------------: |
+  | ![socket-result](res/socket-result.gif) |
 
 ---
