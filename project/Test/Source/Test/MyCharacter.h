@@ -38,6 +38,9 @@ public:
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
+	// 가상함수므로 재정의해서 원하는 로직을 실행시킨다.
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 private:
 	// class: 전방 선언
 
@@ -46,6 +49,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* Camera;		// 카메라
+
+	UPROPERTY(VisibleAnywhere)
+	class UMyStatComponent* Stat;
 
 	UPROPERTY()
 	class UMyAnimInstance* AnimInstance;

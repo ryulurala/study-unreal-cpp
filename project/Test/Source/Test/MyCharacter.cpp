@@ -9,6 +9,7 @@
 #include "MyAnimInstance.h"
 #include "DrawDebugHelpers.h"
 #include "MyHelm.h"
+#include "MyStatComponent.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -35,6 +36,8 @@ AMyCharacter::AMyCharacter()
 		// Mesh가 이미 상속받은 Character class에 선언돼있다.
 		GetMesh()->SetSkeletalMesh(SK_PARAGON.Object);
 	}
+
+	Stat = CreateDefaultSubobject<UMyStatComponent>(TEXT("STAT"));
 }  
 
 void AMyCharacter::PostInitializeComponents()
@@ -54,12 +57,6 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//auto CurrentHelm = GetWorld()->SpawnActor<AMyHelm>(FVector::ZeroVector, FRotator::ZeroRotator);
-	//if (CurrentHelm)
-	//{
-	//	FName HelmSocket(TEXT("Helm"));
-	//	CurrentHelm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HelmSocket);
-	//}
 }
 
 // Called every frame
@@ -140,7 +137,10 @@ void AMyCharacter::AttackCheck()
 
 	if (bResult && HitResult.Actor.IsValid())
 	{
-		UE_LOG(LogTemp, Log, TEXT("Hit Actor: %s"), *HitResult.Actor->GetName());
+		//UE_LOG(LogTemp, Log, TEXT("Hit Actor: %s"), *HitResult.Actor->GetName());
+		
+		FDamageEvent DamageEvent;
+		HitResult.Actor->TakeDamage(Stat->GetAttack(), DamageEvent, GetController(), this);
 	}
 
 	// 디버깅
@@ -165,4 +165,11 @@ void AMyCharacter::AttackCheck()
 void AMyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	IsAttacking = false;
+}
+
+float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Stat->OnAttacked(DamageAmount);
+
+	return DamageAmount;
 }
