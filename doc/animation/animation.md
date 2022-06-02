@@ -11,6 +11,8 @@ Table of Contents
 - [애니메이션 노티파이(Animation Notify)](#애니메이션-노티파이animation-notify)
 - [블렌드 스페이스(Blend Space)](#블렌드-스페이스blend-space)
 
+---
+
 ## 애니메이션 기초
 
 - Skeletal Mesh는 애니메이션을 실행하는 뼈(Bone)을 가지고 있고, 이를 이용해 애니메이션을 실행한다.
