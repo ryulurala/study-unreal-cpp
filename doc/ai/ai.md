@@ -134,27 +134,27 @@ Table of Contents
 
 4. MyCharacter에 빙의 시점 설정
 
-- MyCharacter.cpp
+   - MyCharacter.cpp
 
-```cpp
+     ```cpp
 
-...
+     ...
 
-#include "MyHpWidget.h"
-#include "MyAIController.h"
+     #include "MyHpWidget.h"
+     #include "MyAIController.h"
 
-AMyCharacter::AMyCharacter()
-{
-    ...
+     AMyCharacter::AMyCharacter()
+     {
+         ...
 
-    // AI Controller 클래스 지정
-    AIControllerClass = AMyAIController::StaticClass();
-    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;   // AI 빙의 시점
-}
+         // AI Controller 클래스 지정
+         AIControllerClass = AMyAIController::StaticClass();
+         AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;   // AI 빙의 시점
+     }
 
-...
+     ...
 
-```
+     ```
 
 - 결과
 
