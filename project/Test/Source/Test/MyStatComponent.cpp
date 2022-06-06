@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "MyStatComponent.h"
@@ -32,19 +32,23 @@ void UMyStatComponent::SetLevel(int32 NewLevel)
 		if (StatData)
 		{
 			Level = StatData->Level;
-			Hp = StatData->MaxHp;
+			SetHp(StatData->MaxHp);		// UI 변화에 대응
+			MaxHp = StatData->MaxHp;
 			Attack = StatData->Attack;
 		}
 	}
 }
 
+void UMyStatComponent::SetHp(int32 NewHp)
+{
+	Hp = NewHp >= 0 ? NewHp : 0;
+
+	OnHpChanged.Broadcast();
+}
+
 void UMyStatComponent::OnAttacked(float DamageAmount)
 {
-	Hp -= DamageAmount;
-	if (Hp < 0)
-		Hp = 0;
-
-	UE_LOG(LogTemp, Warning, TEXT("OnAttacked: %d"), Hp);
-
+	int32 NewHp = Hp - DamageAmount;
+	SetHp(NewHp);
 }
 
