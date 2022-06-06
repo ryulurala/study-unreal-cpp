@@ -12,6 +12,7 @@
 #include "MyStatComponent.h"
 #include "Components/WidgetComponent.h"
 #include "MyHpWidget.h"
+#include "MyAIController.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -52,6 +53,10 @@ AMyCharacter::AMyCharacter()
 		HpBar->SetWidgetClass(WBP_HPBAR.Class);
 		HpBar->SetDrawSize(FVector2D(200.0f, 50.0f));
 	}
+
+	// AI Controller 클래스 지정
+	AIControllerClass = AMyAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;		// AI 빙의 시점
 }
 
 void AMyCharacter::PostInitializeComponents()
