@@ -425,31 +425,25 @@ Table of Contents
 
 6. Task 배치하기(in Behavior Tree)
 
+   |       일정 대기 후, 무작위로 이동하는 Behavior Tree 구성        |
+   | :-------------------------------------------------------------: |
+   | ![random-move-behavior-tree](res/random-move-behavior-tree.png) |
+
    - Sequence
 
      > for. 순차적으로 실행
 
      - Wait
-
-       |                5초 대기로 설정                |
-       | :-------------------------------------------: |
-       | ![wait-task-detail](res/wait-task-detail.png) |
-
+       > 5초 간 대기
      - FindPatrolPos
-
-       | 500cm 반경 구체 안, 무작위로 이동 가능한 위치(= FindPatrol Key) 찾기 |
-       | :------------------------------------------------------------------: |
-       | ![find-patrol-pos-task-detail](res/find-patrol-pos-task-detail.png)  |
-
+       > 500cm 반경 구체 안, 무작위로 이동 가능한 위치(= PatrolPos Key) 찾기
      - Move to
 
-       |            무작위로 찾은 위치로 이동하기            |
-       | :-------------------------------------------------: |
-       | ![move-to-task-detail](res/move-to-task-detail.png) |
+       > 무작위로 찾은 위치(= PatrolPos Key로 이동하기
 
-   |       일정 대기 후, 무작위로 이동하는 Behavior Tree 구성        |
-   | :-------------------------------------------------------------: |
-   | ![random-move-behavior-tree](res/random-move-behavior-tree.png) |
+       |                  `Wait` Task                  |                        `FindPatrolPos` Task                         |                    `MoveTo` Task                    |
+       | :-------------------------------------------: | :-----------------------------------------------------------------: | :-------------------------------------------------: |
+       | ![wait-task-detail](res/wait-task-detail.png) | ![find-patrol-pos-task-detail](res/find-patrol-pos-task-detail.png) | ![move-to-task-detail](res/move-to-task-detail.png) |
 
 - 결과
 
