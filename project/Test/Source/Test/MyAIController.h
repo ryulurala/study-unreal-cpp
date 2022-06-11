@@ -21,8 +21,9 @@ public:
 	virtual void OnUnPossess() override;				// 빙의 해제
 	
 private:
-	void RandomMove();
-
-private:
-	FTimerHandle TimerHandle;
+	UPROPERTY()
+	class UBehaviorTree* BehaviorTree;
+	
+	UPROPERTY()
+	class UBlackboardData* BlackboardData;
 };
