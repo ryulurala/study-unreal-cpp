@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "MyCharacter.generated.h"
 
+
+DECLARE_MULTICAST_DELEGATE(FOnAttackEnd);
+
 UCLASS()
 class TEST_API AMyCharacter : public ACharacter
 {
@@ -40,6 +43,9 @@ public:
 
 	// 가상함수므로 재정의해서 원하는 로직을 실행시킨다.
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+public:
+	FOnAttackEnd OnAttackEnd;
 
 private:
 	// class: 전방 선언
