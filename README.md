@@ -12,4 +12,6 @@
 6. [UI](doc/ui/ui.md)
 7. [AI](doc/ai/ai.md)
 
+- [부록](doc/appendix/appendix.md)
+
 ---
