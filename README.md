@@ -1,4 +1,4 @@
-# study_unreal_cpp
+# study-unreal-cpp
 
 [Studying "Unreal C++" by Inf-Learn](https://inf.run/UKuT)
 
